@@ -138,6 +138,11 @@ else
                     case "section":
                         <hr />
                         <h5>@fld.Label</h5>
+                        var secInstructions = JsonSerializer.Deserialize<List<string>>(fld.OptionsJson ?? "[]").FirstOrDefault();
+                        if (!string.IsNullOrWhiteSpace(secInstructions))
+                        {
+                            <p class="text-muted">@secInstructions</p>
+                        }
                         break;
 
                     case "scale":
@@ -331,15 +336,7 @@ else
 
         await Http.PostAsJsonAsync($"api/forms/{FormId}/responses", responseData);
 
-        var user = await CookieHelper.LoginStatus();
-        if (string.IsNullOrEmpty(user))
-        {
-            Navigation.NavigateTo($"/forms/{FormId}/submitted", true);
-        }
-        else
-        {
-            Navigation.NavigateTo($"/forms/{FormId}/responses");
-        }
+        Navigation.NavigateTo($"/forms/{FormId}/submitted", true);
     }
 
     bool IsEmpty(object value)
