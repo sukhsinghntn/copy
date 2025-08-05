@@ -38,11 +38,13 @@
     </div>
 }
 
-<div id="sections">
-    @for (int sIdx = 0; sIdx < sections.Count; sIdx++)
-    {
-        var section = sections[sIdx];
-        <div class="card mb-3 shadow-sm border-start border-5 border-secondary section-wrapper" data-idx="@sIdx">
+<div class="row">
+    <div class="col-md-9">
+        <div id="sections">
+            @for (int sIdx = 0; sIdx < sections.Count; sIdx++)
+            {
+                var section = sections[sIdx];
+                <div class="card mb-3 shadow-sm border-start border-5 @(activeSection == sIdx ? "border-primary" : "border-secondary") section-wrapper" data-idx="@sIdx" @onclick="() => activeSection = sIdx">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary move-handle">
@@ -140,14 +142,34 @@
                     </div>
                 </div>
             }
+                </div>
+            }
         </div>
-    }
-</div>
 
-<div class="d-grid mb-3">
-    <button class="btn btn-outline-secondary" @onclick="AddSection">
-        + Add New Section
-    </button>
+        <div class="d-grid mb-3">
+            <button class="btn btn-outline-secondary" @onclick="AddSection">
+                + Add New Section
+            </button>
+        </div>
+    </div>
+    <div class="col-md-3" style="position:sticky;top:75px;max-height:calc(100vh - 90px);overflow-y:auto;">
+        <h5 class="mb-3">Toolbox</h5>
+        <div class="d-flex flex-wrap gap-2">
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'text')"><span class="material-icons me-1">short_text</span> Short Answer</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'textarea')"><span class="material-icons me-1">notes</span> Paragraph</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'radio')"><span class="material-icons me-1">radio_button_checked</span> Multiple Choice</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'checkbox')"><span class="material-icons me-1">check_box</span> Checkbox</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'dropdown')"><span class="material-icons me-1">arrow_drop_down_circle</span> Dropdown</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'date')"><span class="material-icons me-1">event</span> Date</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'time')"><span class="material-icons me-1">schedule</span> Time</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'datetime')"><span class="material-icons me-1">event_available</span> Date Time</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'scale')"><span class="material-icons me-1">linear_scale</span> Linear Scale</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'grid_radio')"><span class="material-icons me-1">grid_on</span> Choice Grid</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'grid_checkbox')"><span class="material-icons me-1">grid_view</span> Checkbox Grid</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'title')"><span class="material-icons me-1">title</span> Title</div>
+            <div class="draggable-field" @onclick="() => AddField(activeSection, 'file')"><span class="material-icons me-1">upload_file</span> Upload File</div>
+        </div>
+    </div>
 </div>
 
 <div class="d-grid">
@@ -160,6 +182,7 @@
     private string formName = string.Empty;
     private string formDescription = string.Empty;
     private List<DesignerSection> sections = new() { new DesignerSection() };
+    private int activeSection = 0;
     private bool requireLogin = true;
     private bool notifyOnResponse = false;
     private string notificationEmail = string.Empty;
@@ -194,6 +217,7 @@
     async Task AddSection()
     {
         sections.Add(new DesignerSection());
+        activeSection = sections.Count - 1;
         StateHasChanged();
         await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
         await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sections.Count - 1}-fields", objRef!);
@@ -216,6 +240,8 @@
         if (confirm)
         {
             sections.RemoveAt(index);
+            if (activeSection >= sections.Count)
+                activeSection = sections.Count - 1;
             await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
             for (int i = 0; i < sections.Count; i++)
             {
@@ -226,9 +252,9 @@
 
     void ToggleCollapse(DesignerSection section) => section.IsCollapsed = !section.IsCollapsed;
 
-    void AddField(int sectionIndex)
+    void AddField(int sectionIndex, string? type = null)
     {
-        sections[sectionIndex].Fields.Add(new DesignerField());
+        sections[sectionIndex].Fields.Add(new DesignerField { FieldType = type ?? "text" });
         JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
     }
 
@@ -265,6 +291,8 @@
         var item = sections[oldIndex];
         sections.RemoveAt(oldIndex);
         sections.Insert(newIndex, item);
+        if (activeSection == oldIndex)
+            activeSection = newIndex;
         StateHasChanged();
         await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
         for (int i = 0; i < sections.Count; i++)
