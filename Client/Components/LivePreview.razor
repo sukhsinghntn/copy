@@ -118,7 +118,7 @@
                 <h5>@field.Label</h5>
                 @if (!string.IsNullOrWhiteSpace(field.OptionsJson))
                 {
-                    <div class="text-muted">@JsonSerializer.Deserialize<string>(field.OptionsJson)</div>
+                    <div class="text-muted">@(JsonSerializer.Deserialize<string>(field.OptionsJson!) ?? string.Empty)</div>
                 }
                 break;
 
