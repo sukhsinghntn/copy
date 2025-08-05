@@ -6,128 +6,248 @@
     <h3 class="mb-3">@FormName</h3>
 }
 
-@foreach (var row in Rows)
+@if (Sections != null && Sections.Count > 0)
 {
-    <div class="row g-3 mb-3">
-    @foreach (var field in row.Fields)
+    foreach (var sec in Sections)
     {
-        <div class="col-12 col-md-@(12 / (row.Fields.Count == 0 ? 1 : row.Fields.Count)) mb-3">
-            @if (field.FieldType != "title" && field.FieldType != "section")
+        <div class="mb-4">
+            <h5>@sec.Title</h5>
+            @if (!string.IsNullOrWhiteSpace(sec.Instructions))
             {
-                <label class="form-label">@field.Label</label>
+                <p class="text-muted">@sec.Instructions</p>
             }
-
-        @switch (field.FieldType)
-        {
-            case "text":
-                <input class="form-control" placeholder="Short answer" disabled />
-                break;
-
-            case "textarea":
-                <textarea class="form-control" placeholder="Paragraph" disabled></textarea>
-                break;
-
-            case "radio":
-                @foreach (var opt in field.OptionItems)
-                {
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" disabled />
-                        <label class="form-check-label">@opt</label>
-                    </div>
-                }
-                break;
-
-            case "checkbox":
-                @foreach (var opt in field.OptionItems)
-                {
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" disabled />
-                        <label class="form-check-label">@opt</label>
-                    </div>
-                }
-                break;
-
-            case "dropdown":
-                <select class="form-select" disabled>
-                    @foreach (var opt in field.OptionItems)
+            @foreach (var field in sec.Fields)
+            {
+                <div class="mb-3">
+                    @if (field.FieldType != "title")
                     {
-                        <option>@opt</option>
+                        <label class="form-label">@field.Label</label>
                     }
-                </select>
-                break;
 
-            case "scale":
-                <div class="d-flex align-items-center gap-3">
-                    @for (int i = field.ScaleMin; i <= field.ScaleMax; i++)
+                    @switch (field.FieldType)
                     {
-                        <div class="form-check">
-                            <input type="radio" disabled class="form-check-input" />
-                            <label class="form-check-label">@i</label>
-                        </div>
-                    }
+                        case "text":
+                            <input class="form-control" placeholder="Short answer" disabled />
+                            break;
+
+        case "textarea":
+            <textarea class="form-control" placeholder="Paragraph" disabled></textarea>
+            break;
+
+        case "radio":
+            @foreach (var opt in field.OptionItems)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" disabled />
+                    <label class="form-check-label">@opt</label>
                 </div>
-                break;
+            }
+            break;
 
-            case "grid_radio":
-            case "grid_checkbox":
-                <table class="table table-bordered table-sm">
-                    <thead>
+        case "checkbox":
+            @foreach (var opt in field.OptionItems)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" disabled />
+                    <label class="form-check-label">@opt</label>
+                </div>
+            }
+            break;
+
+        case "dropdown":
+            <select class="form-select" disabled>
+                @foreach (var opt in field.OptionItems)
+                {
+                    <option>@opt</option>
+                }
+            </select>
+            break;
+
+        case "scale":
+            <div class="d-flex align-items-center gap-3">
+                @for (int i = field.ScaleMin; i <= field.ScaleMax; i++)
+                {
+                    <div class="form-check">
+                        <input type="radio" disabled class="form-check-input" />
+                        <label class="form-check-label">@i</label>
+                    </div>
+                }
+            </div>
+            break;
+
+        case "grid_radio":
+        case "grid_checkbox":
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th></th>
+                        @foreach (var col in field.GridColumns)
+                        {
+                            <th>@col</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var gridRow in field.GridRows)
+                    {
                         <tr>
-                            <th></th>
+                            <td><strong>@gridRow</strong></td>
                             @foreach (var col in field.GridColumns)
                             {
-                                <th>@col</th>
+                                <td>
+                                    @if (field.FieldType == "grid_radio")
+                                    {
+                                        <input type="radio" disabled />
+                                    }
+                                    else
+                                    {
+                                        <input type="checkbox" disabled />
+                                    }
+                                </td>
                             }
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var gridRow in field.GridRows)
-                        {
-                            <tr>
-                                <td><strong>@gridRow</strong></td>
-                                @foreach (var col in field.GridColumns)
-                                {
-                                    <td>
-                                        @if (field.FieldType == "grid_radio")
-                                        {
-                                            <input type="radio" disabled />
-                                        }
-                                        else
-                                        {
-                                            <input type="checkbox" disabled />
-                                        }
-                                    </td>
-                                }
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-                break;
+                    }
+                </tbody>
+            </table>
+            break;
 
-            case "file":
-                <input type="file" class="form-control" disabled />
-                break;
+        case "file":
+            <input type="file" class="form-control" disabled />
+            break;
 
-            case "title":
-                <h4 class="text-muted">@field.Label</h4>
-                break;
+        case "title":
+            <h4 class="text-muted">@field.Label</h4>
+            break;
 
-            case "section":
-                <hr />
-                <h5>@field.Label</h5>
-                break;
-
-            default:
-                <input class="form-control" disabled />
-                break;
-        }
-
+        default:
+            <input class="form-control" disabled />
+            break;
+                    }
+                </div>
+            }
         </div>
     }
-    </div>
+}
+else if (Rows != null && Rows.Count > 0)
+{
+    foreach (var row in Rows)
+    {
+        <div class="row g-3 mb-3">
+            @foreach (var field in row.Fields)
+            {
+                <div class="col-12 col-md-@(12 / (row.Fields.Count == 0 ? 1 : row.Fields.Count)) mb-3">
+                    @if (field.FieldType != "title")
+                    {
+                        <label class="form-label">@field.Label</label>
+                    }
+
+                    @switch (field.FieldType)
+                    {
+                        case "text":
+                            <input class="form-control" placeholder="Short answer" disabled />
+                            break;
+
+        case "textarea":
+            <textarea class="form-control" placeholder="Paragraph" disabled></textarea>
+            break;
+
+        case "radio":
+            @foreach (var opt in field.OptionItems)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" disabled />
+                    <label class="form-check-label">@opt</label>
+                </div>
+            }
+            break;
+
+        case "checkbox":
+            @foreach (var opt in field.OptionItems)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" disabled />
+                    <label class="form-check-label">@opt</label>
+                </div>
+            }
+            break;
+
+        case "dropdown":
+            <select class="form-select" disabled>
+                @foreach (var opt in field.OptionItems)
+                {
+                    <option>@opt</option>
+                }
+            </select>
+            break;
+
+        case "scale":
+            <div class="d-flex align-items-center gap-3">
+                @for (int i = field.ScaleMin; i <= field.ScaleMax; i++)
+                {
+                    <div class="form-check">
+                        <input type="radio" disabled class="form-check-input" />
+                        <label class="form-check-label">@i</label>
+                    </div>
+                }
+            </div>
+            break;
+
+        case "grid_radio":
+        case "grid_checkbox":
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th></th>
+                        @foreach (var col in field.GridColumns)
+                        {
+                            <th>@col</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var gridRow in field.GridRows)
+                    {
+                        <tr>
+                            <td><strong>@gridRow</strong></td>
+                            @foreach (var col in field.GridColumns)
+                            {
+                                <td>
+                                    @if (field.FieldType == "grid_radio")
+                                    {
+                                        <input type="radio" disabled />
+                                    }
+                                    else
+                                    {
+                                        <input type="checkbox" disabled />
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            break;
+
+        case "file":
+            <input type="file" class="form-control" disabled />
+            break;
+
+        case "title":
+            <h4 class="text-muted">@field.Label</h4>
+            break;
+
+        default:
+            <input class="form-control" disabled />
+            break;
+                    }
+                </div>
+            }
+        </div>
+    }
 }
 
 @code {
-    [Parameter] public List<DesignerRow> Rows { get; set; } = new();
+    [Parameter] public List<DesignerRow>? Rows { get; set; }
+    [Parameter] public List<DesignerSection>? Sections { get; set; }
     [Parameter] public string? FormName { get; set; }
 }
