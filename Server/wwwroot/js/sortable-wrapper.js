@@ -1,4 +1,4 @@
-window.initSortable = (selector, dotnetHelper) => {
+export function initSortable(selector, dotnetHelper) {
     const container = document.querySelector(selector);
     if (!container) return;
 
@@ -23,9 +23,9 @@ window.initSortable = (selector, dotnetHelper) => {
             }
         });
     });
-};
+}
 
-window.initListSortable = (selector, dotnetHelper) => {
+export function initListSortable(selector, dotnetHelper) {
     const container = document.querySelector(selector);
     if (!container || container.dataset.sortableInit === 'true') return;
     container.dataset.sortableInit = 'true';
@@ -34,9 +34,9 @@ window.initListSortable = (selector, dotnetHelper) => {
         handle: '.move-handle',
         onEnd: evt => dotnetHelper.invokeMethodAsync('OnFieldReorder', evt.oldIndex, evt.newIndex)
     });
-};
+}
 
-window.initSectionSortable = (selector, dotnetHelper) => {
+export function initSectionSortable(selector, dotnetHelper) {
     const container = document.querySelector(selector);
     if (!container || container.dataset.sortableInit === 'true') return;
     container.dataset.sortableInit = 'true';
@@ -46,9 +46,9 @@ window.initSectionSortable = (selector, dotnetHelper) => {
         draggable: '.section-wrapper',
         onEnd: evt => dotnetHelper.invokeMethodAsync('OnSectionReorder', evt.oldIndex, evt.newIndex)
     });
-};
+}
 
-window.initSectionFieldSortable = (selector, dotnetHelper) => {
+export function initSectionFieldSortable(selector, dotnetHelper) {
     const container = document.querySelector(selector);
     if (!container || container.dataset.sortableInit === 'true') return;
     container.dataset.sortableInit = 'true';
@@ -63,4 +63,4 @@ window.initSectionFieldSortable = (selector, dotnetHelper) => {
             dotnetHelper.invokeMethodAsync('OnFieldReorder', fromSection, evt.oldIndex, toSection, evt.newIndex);
         }
     });
-};
+}

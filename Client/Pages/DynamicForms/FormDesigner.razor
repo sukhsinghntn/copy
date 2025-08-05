@@ -111,6 +111,7 @@
     private string notificationEmail = string.Empty;
     private UserModel? currentUser;
     private DotNetObjectReference<FormDesigner>? objRef;
+    private IJSObjectReference? sortableModule;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -129,10 +130,11 @@
             }
 
             objRef = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef);
+            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "/js/sortable-wrapper.js");
+            await sortableModule.InvokeVoidAsync("initSectionSortable", "#sections", objRef);
             for (int i = 0; i < sections.Count; i++)
             {
-                await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef);
+                await sortableModule.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef);
             }
         }
     }
@@ -141,8 +143,8 @@
     {
         sections.Add(new DesignerSection());
         StateHasChanged();
-        await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
-        await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sections.Count - 1}-fields", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sections.Count - 1}-fields", objRef!);
     }
 
     async Task RemoveSection(int index)
@@ -162,10 +164,10 @@
         if (confirm)
         {
             sections.RemoveAt(index);
-            await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
+            await sortableModule!.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
             for (int i = 0; i < sections.Count; i++)
             {
-                await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef!);
+                await sortableModule!.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef!);
             }
         }
     }
@@ -176,14 +178,14 @@
     {
         sections[sectionIndex].Fields.Add(new DesignerField());
         await InvokeAsync(StateHasChanged);
-        await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
     }
 
     async Task RemoveField(int sectionIndex, DesignerField field)
     {
         sections[sectionIndex].Fields.Remove(field);
         await InvokeAsync(StateHasChanged);
-        await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
     }
 
     async Task DuplicateField(int sectionIndex, DesignerField field)
@@ -205,7 +207,7 @@
         };
         sections[sectionIndex].Fields.Insert(index + 1, copy);
         await InvokeAsync(StateHasChanged);
-        await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
     }
 
     [JSInvokable]
@@ -217,10 +219,10 @@
         sections.RemoveAt(oldIndex);
         sections.Insert(newIndex, item);
         StateHasChanged();
-        await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
         for (int i = 0; i < sections.Count; i++)
         {
-            await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef!);
+            await sortableModule!.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef!);
         }
     }
 
@@ -235,8 +237,8 @@
         source.RemoveAt(oldIndex);
         dest.Insert(newIndex, item);
         StateHasChanged();
-        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{fromSection}-fields", objRef!);
-        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{toSection}-fields", objRef!);
+        sortableModule!.InvokeVoidAsync("initSectionFieldSortable", $"#section-{fromSection}-fields", objRef!);
+        sortableModule!.InvokeVoidAsync("initSectionFieldSortable", $"#section-{toSection}-fields", objRef!);
     }
 
     async Task HandleSubmit()
@@ -348,5 +350,6 @@
     public void Dispose()
     {
         objRef?.Dispose();
+        sortableModule?.DisposeAsync();
     }
 }

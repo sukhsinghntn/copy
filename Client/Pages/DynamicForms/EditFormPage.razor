@@ -5,6 +5,7 @@
 @using DynamicFormsApp.Client.Components
 @using DynamicFormsApp.Shared
 @using DynamicFormsApp.Shared.Models
+@using Microsoft.JSInterop
 @inject IJSRuntime JS
 @inject HttpClient Http
 @inject NavigationManager Navigation
@@ -139,6 +140,7 @@ else
     private DotNetObjectReference<DynamicFormsApp.Client.Pages.DynamicForms.EditFormPage>? objRef;
     private string? deletedMessage;
     private DeletedFormInfo? unavailableInfo;
+    private IJSObjectReference? sortableModule;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -186,7 +188,8 @@ else
         if (!isPreviewMode)
         {
             objRef ??= DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef);
+            sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/sortable-wrapper.js");
+            await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef);
             await JS.InvokeVoidAsync("initFieldDragDrop", "#fields-container", objRef);
         }
     }
@@ -225,13 +228,13 @@ else
             rows.RemoveAt(fromRow);
         }
         StateHasChanged();
-        JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        sortableModule!.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     async Task AddRow()
     {
         rows.Add(new DesignerRow());
-        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     async Task AddField(int row)
@@ -247,7 +250,7 @@ else
             return;
         }
         rows[row].Fields.Add(new DesignerField());
-        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     async Task RemoveField(int row, DesignerField field)
@@ -268,7 +271,7 @@ else
         {
             rows.RemoveAt(row);
         }
-        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     async Task DuplicateField(int row, DesignerField field)
@@ -298,7 +301,7 @@ else
         }
 
         list.Insert(list.IndexOf(field) + 1, copy);
-        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     [JSInvokable]
@@ -328,7 +331,7 @@ else
             list.Insert(colIndex, field);
 
         StateHasChanged();
-        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     [JSInvokable]
@@ -341,7 +344,7 @@ else
         row.Fields.Add(new DesignerField { FieldType = fieldType });
         rows.Insert(insertIndex, row);
         StateHasChanged();
-        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule!.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     private List<DesignerRow> BuildDesignerRows(Form form)
@@ -471,5 +474,6 @@ else
     public void Dispose()
     {
         objRef?.Dispose();
+        sortableModule?.DisposeAsync();
     }
 }
