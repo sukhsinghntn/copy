@@ -161,7 +161,7 @@
 @code {
     private string formName = string.Empty;
     private string formDescription = string.Empty;
-    private List<DesignerSection> sections = new();
+    private List<DesignerSection> sections = new() { new DesignerSection() };
     private bool requireLogin = true;
     private bool notifyOnResponse = false;
     private string notificationEmail = string.Empty;
@@ -203,6 +203,17 @@
 
     async Task RemoveSection(int index)
     {
+        if (sections.Count <= 1)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Cannot delete section",
+                Detail = "A form must contain at least one section."
+            });
+            return;
+        }
+
         bool confirm = await JS.InvokeAsync<bool>("confirm", "Delete this section?");
         if (confirm)
         {
