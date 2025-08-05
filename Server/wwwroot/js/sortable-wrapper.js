@@ -25,13 +25,40 @@ window.initSortable = (selector, dotnetHelper) => {
     });
 };
 
-window.initListSortable = (selector, dotnetHelper) => {
+// simple list sortable used by original designer
+window.initListSortable = (selector, dotnetHelper, callback) => {
     const container = document.querySelector(selector);
     if (!container || container.dataset.sortableInit === 'true') return;
     container.dataset.sortableInit = 'true';
     new Sortable(container, {
         animation: 150,
         handle: '.move-handle',
-        onEnd: evt => dotnetHelper.invokeMethodAsync('OnFieldReorder', evt.oldIndex, evt.newIndex)
+        onEnd: evt => dotnetHelper.invokeMethodAsync(callback || 'OnFieldReorder', evt.oldIndex, evt.newIndex)
+    });
+};
+
+// sortable for sections in the form designer
+window.initSectionSortable = (selector, dotnetHelper) => {
+    const container = document.querySelector(selector);
+    if (!container) return;
+    if (container.dataset.sortableInit === 'true') return;
+    container.dataset.sortableInit = 'true';
+    new Sortable(container, {
+        animation: 150,
+        handle: '.section-move-handle',
+        onEnd: evt => dotnetHelper.invokeMethodAsync('OnSectionReorder', evt.oldIndex, evt.newIndex)
+    });
+};
+
+// sortable for fields inside a specific section
+window.initFieldSortable = (selector, sectionIndex, dotnetHelper) => {
+    const container = document.querySelector(selector);
+    if (!container) return;
+    if (container.dataset.sortableInit === 'true') return;
+    container.dataset.sortableInit = 'true';
+    new Sortable(container, {
+        animation: 150,
+        handle: '.move-handle',
+        onEnd: evt => dotnetHelper.invokeMethodAsync('OnFieldReorder', sectionIndex, evt.oldIndex, evt.newIndex)
     });
 };
