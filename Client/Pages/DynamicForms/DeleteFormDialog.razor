@@ -1,0 +1,34 @@
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+<RadzenCard Style="width:100%;max-width:400px">
+    <div class="mb-3">
+        <label class="form-label">Reason for deleting '@FormName'</label>
+        <RadzenTextArea @bind-Value="reason" Style="width:100%" Rows="3" />
+    </div>
+    <div class="d-flex justify-content-end">
+        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Secondary" Click="@(() => DialogService.Close(null))" class="me-2" />
+        <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Click="Confirm" Disabled="@string.IsNullOrWhiteSpace(reason)" />
+    </div>
+</RadzenCard>
+
+@code {
+    [Parameter] public string FormName { get; set; } = string.Empty;
+
+    private string reason = string.Empty;
+
+    void Confirm()
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Reason required",
+                Detail = "Please provide a reason"
+            });
+            return;
+        }
+        DialogService.Close(reason);
+    }
+}

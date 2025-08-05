@@ -1,0 +1,173 @@
+@page "/admin"
+@using System.Net.Http.Json
+@using DynamicFormsApp.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject CookieHelper CookieHelper
+@inject IUserService UserService
+
+<h3>Admin Forms</h3>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class='nav-link @(activeTab == "deleted" ? "active" : null)' href="#" @onclick='() => SetTab("deleted")' @onclick:preventDefault>Deleted Forms</a>
+    </li>
+    <li class="nav-item">
+        <a class='nav-link @(activeTab == "inactive" ? "active" : null)' href="#" @onclick='() => SetTab("inactive")' @onclick:preventDefault>Unpublished Forms</a>
+    </li>
+</ul>
+
+<input class="form-control mb-3" placeholder="Search..." @bind="searchTerm" />
+
+@if (forms == null || inactiveForms == null)
+{
+    <p>Loading...</p>
+}
+else if (activeTab == "deleted" && !FilteredForms.Any())
+{
+    <p>No deleted forms found.</p>
+}
+else if (activeTab == "inactive" && !FilteredInactive.Any())
+{
+    <p>No unpublished forms found.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Owner</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (activeTab == "deleted")
+                {
+                    @foreach (var f in FilteredForms)
+                    {
+                        <tr>
+                            <td>@f.Name</td>
+                            <td>@f.Description</td>
+                            <td>@f.CreatedBy</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary me-2" @onclick="() => Restore(f.Id)">Restore</button>
+                                <a class="btn btn-sm btn-secondary" href="@($"/forms/{f.Id}/edit")">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    @foreach (var f in FilteredInactive)
+                    {
+                        <tr>
+                            <td>@f.Name</td>
+                            <td>@f.Description</td>
+                            <td>@f.CreatedBy</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary me-2" @onclick="() => Publish(f.Id)">Publish</button>
+                                <a class="btn btn-sm btn-secondary" href="@($"/forms/{f.Id}/edit")">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<Form>? forms;
+    private List<Form>? inactiveForms;
+    private string searchTerm = string.Empty;
+    private string activeTab = "deleted";
+
+    private IEnumerable<Form> FilteredForms => string.IsNullOrWhiteSpace(searchTerm)
+        ? forms ?? Enumerable.Empty<Form>()
+        : forms?.Where(f =>
+            (f.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (f.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (f.CreatedBy?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+            ?? Enumerable.Empty<Form>();
+
+    private IEnumerable<Form> FilteredInactive => string.IsNullOrWhiteSpace(searchTerm)
+        ? inactiveForms ?? Enumerable.Empty<Form>()
+        : inactiveForms?.Where(f =>
+            (f.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (f.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (f.CreatedBy?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+            ?? Enumerable.Empty<Form>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var user = await CookieHelper.LoginStatus();
+            if (string.IsNullOrEmpty(user))
+            {
+                var ret = Uri.EscapeDataString(Navigation.ToBaseRelativePath(Navigation.Uri));
+                Navigation.NavigateTo($"login?returnUrl={ret}", true);
+                return;
+            }
+
+            var info = await UserService.GetUserData(user);
+            if (!string.Equals(info?.Department, "Information Technology", StringComparison.OrdinalIgnoreCase))
+            {
+                Navigation.NavigateTo("/", true);
+                return;
+            }
+
+            forms = (await Http.GetFromJsonAsync<List<Form>>("api/forms/deleted"))
+                ?.Where(f => !f.IsDraft)
+                .ToList();
+            inactiveForms = (await Http.GetFromJsonAsync<List<Form>>("api/forms/inactive"))
+                ?.Where(f => !f.IsDraft)
+                .ToList();
+            StateHasChanged();
+        }
+    }
+
+    private async Task Restore(int id)
+    {
+        var item = forms?.FirstOrDefault(f => f.Id == id);
+        if (item == null)
+            return;
+
+        bool? confirm = await DialogService.Confirm(
+            $"Are you sure you want to restore '{item.Name}' {item.Description}?",
+            "Restore Form",
+            new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (confirm != true)
+            return;
+
+        await Http.PostAsync($"api/forms/{id}/restore", null);
+        forms!.Remove(item);
+        StateHasChanged();
+    }
+
+    private async Task Publish(int id)
+    {
+        var item = inactiveForms?.FirstOrDefault(f => f.Id == id);
+        if (item == null)
+            return;
+
+        bool? confirm = await DialogService.Confirm(
+            $"Are you sure you want to publish '{item.Name}' {item.Description}?",
+            "Publish Form",
+            new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (confirm != true)
+            return;
+
+        await Http.PostAsync($"api/forms/{id}/publish", null);
+        inactiveForms!.Remove(item);
+        StateHasChanged();
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+    }
+}
