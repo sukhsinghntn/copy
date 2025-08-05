@@ -40,6 +40,12 @@
     </div>
 }
 
+<div class="d-grid mb-3">
+    <button class="btn btn-outline-secondary" @onclick="AddSection">
+        + Add New Section
+    </button>
+</div>
+
 <div id="sections">
 @for (int sIndex = 0; sIndex < sections.Count; sIndex++)
 {
@@ -137,12 +143,6 @@
 }
 </div>
 
-<div class="d-grid mb-3">
-    <button class="btn btn-outline-secondary" @onclick="AddSection">
-        + Add New Section
-    </button>
-</div>
-
 <div class="d-grid">
     <button class="btn btn-primary btn-lg" @onclick="HandleSubmit">
         Create Form
@@ -152,7 +152,7 @@
 @code {
     private string formName = string.Empty;
     private string formDescription = string.Empty;
-    private List<DesignerSection> sections = new();
+    private List<DesignerSection> sections = new() { new DesignerSection() };
     private bool requireLogin = true;
     private bool notifyOnResponse = false;
     private string notificationEmail = string.Empty;
