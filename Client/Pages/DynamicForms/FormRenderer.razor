@@ -138,6 +138,11 @@ else
                     case "section":
                         <hr />
                         <h5>@fld.Label</h5>
+                        var secInstructions = JsonSerializer.Deserialize<List<string>>(fld.OptionsJson ?? "[]").FirstOrDefault();
+                        if (!string.IsNullOrWhiteSpace(secInstructions))
+                        {
+                            <p class="text-muted">@secInstructions</p>
+                        }
                         break;
 
                     case "scale":

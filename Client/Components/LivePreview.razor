@@ -19,7 +19,7 @@
             @foreach (var field in sec.Fields)
             {
                 <div class="mb-3">
-                    @if (field.FieldType != "title" && field.FieldType != "section")
+                    @if (field.FieldType != "title")
                     {
                         <label class="form-label">@field.Label</label>
                     }
@@ -117,11 +117,6 @@
 
         case "title":
             <h4 class="text-muted">@field.Label</h4>
-            break;
-
-        case "section":
-            <hr />
-            <h5>@field.Label</h5>
             break;
 
         default:
@@ -141,7 +136,7 @@ else if (Rows != null && Rows.Count > 0)
             @foreach (var field in row.Fields)
             {
                 <div class="col-12 col-md-@(12 / (row.Fields.Count == 0 ? 1 : row.Fields.Count)) mb-3">
-                    @if (field.FieldType != "title" && field.FieldType != "section")
+                    @if (field.FieldType != "title")
                     {
                         <label class="form-label">@field.Label</label>
                     }
@@ -239,11 +234,6 @@ else if (Rows != null && Rows.Count > 0)
 
         case "title":
             <h4 class="text-muted">@field.Label</h4>
-            break;
-
-        case "section":
-            <hr />
-            <h5>@field.Label</h5>
             break;
 
         default:
