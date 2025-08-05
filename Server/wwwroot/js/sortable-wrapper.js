@@ -25,13 +25,20 @@ window.initSortable = (selector, dotnetHelper) => {
     });
 };
 
-window.initListSortable = (selector, dotnetHelper) => {
+window.initListSortable = (selector, dotnetHelper, callback = 'OnFieldReorder') => {
     const container = document.querySelector(selector);
     if (!container || container.dataset.sortableInit === 'true') return;
     container.dataset.sortableInit = 'true';
     new Sortable(container, {
         animation: 150,
         handle: '.move-handle',
-        onEnd: evt => dotnetHelper.invokeMethodAsync('OnFieldReorder', evt.oldIndex, evt.newIndex)
+        onEnd: evt => {
+            const secIdx = container.dataset.sectionIndex;
+            if (secIdx !== undefined) {
+                dotnetHelper.invokeMethodAsync(callback, parseInt(secIdx), evt.oldIndex, evt.newIndex);
+            } else {
+                dotnetHelper.invokeMethodAsync(callback, evt.oldIndex, evt.newIndex);
+            }
+        }
     });
 };
