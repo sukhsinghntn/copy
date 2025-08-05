@@ -240,7 +240,8 @@ namespace DynamicFormsApp.Server.Controllers
             await _svc.DeleteFormAsync(id, user, isAdmin);
 
             var owner = await _userSvc.GetUserData(form.CreatedBy);
-            if (!string.IsNullOrEmpty(owner?.Email))
+            if (!string.Equals(form.CreatedBy, user, StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrEmpty(owner?.Email))
             {
                 var deletedBy = requester?.DisplayName ?? user;
                 await _emailSvc.SendFormDeletedNotification(owner.Email, form.Name, form.Description, deletedBy, reason ?? string.Empty);
