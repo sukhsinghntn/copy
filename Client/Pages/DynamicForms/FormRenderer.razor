@@ -331,15 +331,7 @@ else
 
         await Http.PostAsJsonAsync($"api/forms/{FormId}/responses", responseData);
 
-        var user = await CookieHelper.LoginStatus();
-        if (string.IsNullOrEmpty(user))
-        {
-            Navigation.NavigateTo($"/forms/{FormId}/submitted", true);
-        }
-        else
-        {
-            Navigation.NavigateTo($"/forms/{FormId}/responses");
-        }
+        Navigation.NavigateTo($"/forms/{FormId}/submitted", true);
     }
 
     bool IsEmpty(object value)
