@@ -8,15 +8,15 @@
 
 @if (Sections != null && Sections.Count > 0)
 {
-    foreach (var section in Sections)
+    foreach (var sec in Sections)
     {
         <div class="mb-4">
-            <h5>@section.Title</h5>
-            @if (!string.IsNullOrWhiteSpace(section.Instructions))
+            <h5>@sec.Title</h5>
+            @if (!string.IsNullOrWhiteSpace(sec.Instructions))
             {
-                <p class="text-muted">@section.Instructions</p>
+                <p class="text-muted">@sec.Instructions</p>
             }
-            @foreach (var field in section.Fields)
+            @foreach (var field in sec.Fields)
             {
                 <div class="mb-3">
                     @if (field.FieldType != "title" && field.FieldType != "section")
