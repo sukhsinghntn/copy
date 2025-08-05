@@ -9,7 +9,6 @@
 @inject CookieHelper CookieHelper
 @inject IJSRuntime JS
 @implements IDisposable
-@inject IJSRuntime JS
 
 <h2 class="mb-4">Form Builder</h2>
 
@@ -203,7 +202,11 @@
         public bool IsRequired { get; set; }
     }
 
-    void AddSection() => sections.Add(new DesignerSection());
+    void AddSection()
+    {
+        sections.Add(new DesignerSection());
+        StateHasChanged();
+    }
 
     async Task RemoveSection(DesignerSection section)
     {
@@ -215,7 +218,11 @@
 
     void ToggleSection(DesignerSection section) => section.Collapsed = !section.Collapsed;
 
-    void AddField(int sectionIndex) => sections[sectionIndex].Fields.Add(new DesignerField());
+    void AddField(int sectionIndex)
+    {
+        sections[sectionIndex].Fields.Add(new DesignerField());
+        StateHasChanged();
+    }
 
     void RemoveField(int sectionIndex, DesignerField field) => sections[sectionIndex].Fields.Remove(field);
 
