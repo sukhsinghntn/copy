@@ -1,7 +1,9 @@
 @page "/razer"
 @using System.Net.Http.Json
 @using System.Text.Json
+@using System.Linq
 @using DynamicFormsApp.Shared.Models
+@using DynamicFormsApp.Shared
 @using Microsoft.JSInterop
 @inject IUserService UserService
 @inject HttpClient Http
@@ -42,7 +44,7 @@
     @for (int sIdx = 0; sIdx < sections.Count; sIdx++)
     {
         var section = sections[sIdx];
-        <div class="card mb-3 shadow-sm border-start border-5 border-secondary" data-idx="@sIdx">
+        <div class="card mb-3 shadow-sm border-start border-5 border-secondary section-wrapper" data-idx="@sIdx">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary move-handle">
@@ -69,7 +71,7 @@
                               placeholder="Section instructions"
                               @bind="section.Instructions"></textarea>
 
-                    <div id="section-@sIdx-fields">
+                    <div id="section-@sIdx-fields" data-section="@sIdx">
                         @for (int fIdx = 0; fIdx < section.Fields.Count; fIdx++)
                         {
                             var field = section.Fields[fIdx];
@@ -116,7 +118,8 @@
                                         <div class="col-md-4">
                                             <input type="text" class="form-control"
                                                    placeholder="Option1, Option2, ..."
-                                                   @bind="field.Options" />
+                                                   value="@string.Join(", ", field.OptionItems)"
+                                                   @onchange="e => field.OptionItems = e.Value?.ToString()?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? new()" />
                                         </div>
                                     </div>
 
@@ -185,32 +188,17 @@
             await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef);
             for (int i = 0; i < sections.Count; i++)
             {
-                await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef, i);
+                await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef);
             }
         }
     }
 
-    class DesignerSection
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Instructions { get; set; } = string.Empty;
-        public bool IsCollapsed { get; set; }
-        public List<DesignerField> Fields { get; set; } = new();
-    }
-
-    class DesignerField
-    {
-        public string Key { get; set; } = string.Empty;
-        public string Label { get; set; } = string.Empty;
-        public string FieldType { get; set; } = "text";
-        public string Options { get; set; } = "";
-        public bool IsRequired { get; set; }
-    }
-
-    void AddSection()
+    async Task AddSection()
     {
         sections.Add(new DesignerSection());
-        JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
+        StateHasChanged();
+        await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
+        await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sections.Count - 1}-fields", objRef!);
     }
 
     async Task RemoveSection(int index)
@@ -220,6 +208,10 @@
         {
             sections.RemoveAt(index);
             await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
+            for (int i = 0; i < sections.Count; i++)
+            {
+                await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef!);
+            }
         }
     }
 
@@ -228,13 +220,13 @@
     void AddField(int sectionIndex)
     {
         sections[sectionIndex].Fields.Add(new DesignerField());
-        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!, sectionIndex);
+        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
     }
 
     void RemoveField(int sectionIndex, DesignerField field)
     {
         sections[sectionIndex].Fields.Remove(field);
-        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!, sectionIndex);
+        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
     }
 
     void DuplicateField(int sectionIndex, int index)
@@ -245,15 +237,19 @@
             Key = string.Empty,
             Label = src.Label,
             FieldType = src.FieldType,
-            Options = src.Options,
-            IsRequired = src.IsRequired
+            IsRequired = src.IsRequired,
+            OptionItems = new List<string>(src.OptionItems),
+            GridRows = new List<string>(src.GridRows),
+            GridColumns = new List<string>(src.GridColumns),
+            ScaleMin = src.ScaleMin,
+            ScaleMax = src.ScaleMax
         };
         sections[sectionIndex].Fields.Insert(index + 1, copy);
-        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!, sectionIndex);
+        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{sectionIndex}-fields", objRef!);
     }
 
     [JSInvokable]
-    public void OnSectionReorder(int oldIndex, int newIndex)
+    public async Task OnSectionReorder(int oldIndex, int newIndex)
     {
         if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= sections.Count || newIndex >= sections.Count)
             return;
@@ -261,19 +257,26 @@
         sections.RemoveAt(oldIndex);
         sections.Insert(newIndex, item);
         StateHasChanged();
+        await JS.InvokeVoidAsync("initSectionSortable", "#sections", objRef!);
+        for (int i = 0; i < sections.Count; i++)
+        {
+            await JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{i}-fields", objRef!);
+        }
     }
 
     [JSInvokable]
-    public void OnFieldReorder(int sectionIndex, int oldIndex, int newIndex)
+    public void OnFieldReorder(int fromSection, int oldIndex, int toSection, int newIndex)
     {
-        if (sectionIndex < 0 || sectionIndex >= sections.Count) return;
-        var list = sections[sectionIndex].Fields;
-        if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= list.Count || newIndex >= list.Count)
-            return;
-        var item = list[oldIndex];
-        list.RemoveAt(oldIndex);
-        list.Insert(newIndex, item);
+        if (fromSection < 0 || fromSection >= sections.Count || toSection < 0 || toSection >= sections.Count) return;
+        var source = sections[fromSection].Fields;
+        var dest = sections[toSection].Fields;
+        if (oldIndex < 0 || oldIndex >= source.Count || newIndex < 0 || newIndex > dest.Count) return;
+        var item = source[oldIndex];
+        source.RemoveAt(oldIndex);
+        dest.Insert(newIndex, item);
         StateHasChanged();
+        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{fromSection}-fields", objRef!);
+        JS.InvokeVoidAsync("initSectionFieldSortable", $"#section-{toSection}-fields", objRef!);
     }
 
     async Task HandleSubmit()
@@ -316,7 +319,7 @@
                 }
 
                 if ((f.FieldType == "radio" || f.FieldType == "checkbox" || f.FieldType == "dropdown") &&
-                    f.Options.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length == 0)
+                    f.OptionItems.Count == 0)
                 {
                     NotificationService.Notify(new NotificationMessage
                     {
@@ -349,11 +352,9 @@
                     Label = f.Label,
                     FieldType = f.FieldType,
                     IsRequired = f.IsRequired,
-                    OptionsJson = string.IsNullOrWhiteSpace(f.Options)
+                    OptionsJson = f.OptionItems.Count == 0
                         ? null
-                        : JsonSerializer.Serialize(
-                            f.Options.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                        )
+                        : JsonSerializer.Serialize(f.OptionItems)
                 })
             )).ToList()
         };
