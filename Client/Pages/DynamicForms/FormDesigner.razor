@@ -41,73 +41,106 @@
     </div>
 }
 
-<div id="simple-fields">
-@for (int index = 0; index < fields.Count; index++)
+<div id="sections">
+@for (int sIndex = 0; sIndex < sections.Count; sIndex++)
 {
-    var field = fields[index];
-    <div class="card mb-3 shadow-sm border-start border-5 border-primary" data-idx="@index">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary move-handle">
-                        <span class="material-icons">drag_indicator</span>
-                    </button>
-                    <input type="text"
-                           class="form-control form-control-sm"
-                           placeholder="Question/Label"
-                           @bind="field.Label" />
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => DuplicateField(index)">
-                        <span class="material-icons">content_copy</span>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveField(field)">
-                        <span class="material-icons">delete</span>
-                    </button>
-                </div>
+    var section = sections[sIndex];
+    <div class="card mb-4" data-id="@sIndex">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary move-handle">
+                    <span class="material-icons">drag_indicator</span>
+                </button>
+                <input type="text" class="form-control form-control-sm" placeholder="Section title" @bind="section.Title" />
             </div>
-
-            <div class="row g-2 align-items-center">
-                <div class="col-md-4">
-                    <select class="form-select" @bind="field.FieldType">
-                        <option value="text">Short Answer</option>
-                        <option value="textarea">Paragraph</option>
-                        <option value="radio">Multiple Choice</option>
-                        <option value="checkbox">Checkbox</option>
-                        <option value="dropdown">Dropdown</option>
-                        <option value="date">Date</option>
-                        <option value="time">Time</option>
-                        <option value="datetime">Date Time</option>
-                        <option value="scale">Linear Scale</option>
-                        <option value="grid_radio">Multiple Choice Grid</option>
-                        <option value="grid_checkbox">Checkbox Grid</option>
-                        <option value="title">Title and Description</option>
-                        <option value="section">Section</option>
-                        <option value="file">Upload File</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <input type="text" class="form-control"
-                           placeholder="Option1, Option2, ..."
-                           @bind="field.Options" />
-                </div>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ToggleSection(section)">
+                    <span class="material-icons">@(!section.Collapsed ? "expand_less" : "expand_more")</span>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveSection(section)">
+                    <span class="material-icons">delete</span>
+                </button>
             </div>
+        </div>
+        <div class="card-body" style="@(section.Collapsed ? "display:none;" : string.Empty)">
+            <div class="mb-3">
+                <textarea class="form-control" placeholder="Add instructions" @bind="section.Instructions"></textarea>
+            </div>
+            <div id="fields-@sIndex" data-section-index="@sIndex">
+                @for (int index = 0; index < section.Fields.Count; index++)
+                {
+                    var field = section.Fields[index];
+                    <div class="card mb-3 shadow-sm border-start border-5 border-primary" data-id="@index">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary move-handle">
+                                        <span class="material-icons">drag_indicator</span>
+                                    </button>
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           placeholder="Question/Label"
+                                           @bind="field.Label" />
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => DuplicateField(sIndex, index)">
+                                        <span class="material-icons">content_copy</span>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveField(sIndex, field)">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </div>
+                            </div>
 
-            @if (field.FieldType != "title" && field.FieldType != "section")
-            {
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" @bind="field.IsRequired" />
-                    <label class="form-check-label">Required</label>
-                </div>
-            }
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-4">
+                                    <select class="form-select" @bind="field.FieldType">
+                                        <option value="text">Short Answer</option>
+                                        <option value="textarea">Paragraph</option>
+                                        <option value="radio">Multiple Choice</option>
+                                        <option value="checkbox">Checkbox</option>
+                                        <option value="dropdown">Dropdown</option>
+                                        <option value="date">Date</option>
+                                        <option value="time">Time</option>
+                                        <option value="datetime">Date Time</option>
+                                        <option value="scale">Linear Scale</option>
+                                        <option value="grid_radio">Multiple Choice Grid</option>
+                                        <option value="grid_checkbox">Checkbox Grid</option>
+                                        <option value="title">Title and Description</option>
+                                        <option value="file">Upload File</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control"
+                                           placeholder="Option1, Option2, ..."
+                                           @bind="field.Options" />
+                                </div>
+                            </div>
+
+                            @if (field.FieldType != "title")
+                            {
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" @bind="field.IsRequired" />
+                                    <label class="form-check-label">Required</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="d-grid mb-3">
+                <button class="btn btn-outline-secondary" @onclick="() => AddField(sIndex)">
+                    + Add Field
+                </button>
+            </div>
         </div>
     </div>
 }
 </div>
 
 <div class="d-grid mb-3">
-    <button class="btn btn-outline-secondary" @onclick="AddField">
-        + Add New Field
+    <button class="btn btn-outline-secondary" @onclick="AddSection">
+        + Add New Section
     </button>
 </div>
 
@@ -120,7 +153,7 @@
 @code {
     private string formName = string.Empty;
     private string formDescription = string.Empty;
-    private List<DesignerField> fields = new();
+    private List<DesignerSection> sections = new();
     private bool requireLogin = true;
     private bool notifyOnResponse = false;
     private string notificationEmail = string.Empty;
@@ -144,8 +177,21 @@
             }
 
             objRef = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("initListSortable", "#simple-fields", objRef);
         }
+
+        await JS.InvokeVoidAsync("initListSortable", "#sections", objRef!, "OnSectionReorder");
+        for (int i = 0; i < sections.Count; i++)
+        {
+            await JS.InvokeVoidAsync("initListSortable", $"#fields-{i}", objRef!, "OnFieldReorder");
+        }
+    }
+
+    class DesignerSection
+    {
+        public string Title { get; set; } = "Untitled Section";
+        public string Instructions { get; set; } = string.Empty;
+        public bool Collapsed { get; set; }
+        public List<DesignerField> Fields { get; set; } = new();
     }
 
     class DesignerField
@@ -153,25 +199,30 @@
         public string Key { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
         public string FieldType { get; set; } = "text";
-        public string Options { get; set; } = "";
+        public string Options { get; set; } = string.Empty;
         public bool IsRequired { get; set; }
     }
 
-    void AddField()
+    void AddSection() => sections.Add(new DesignerSection());
+
+    async Task RemoveSection(DesignerSection section)
     {
-        fields.Add(new DesignerField());
-        JS.InvokeVoidAsync("initListSortable", "#simple-fields", objRef!);
+        if (await JS.InvokeAsync<bool>("confirm", $"Delete section '{section.Title}'?"))
+        {
+            sections.Remove(section);
+        }
     }
 
-    void RemoveField(DesignerField field)
-    {
-        fields.Remove(field);
-        JS.InvokeVoidAsync("initListSortable", "#simple-fields", objRef!);
-    }
+    void ToggleSection(DesignerSection section) => section.Collapsed = !section.Collapsed;
 
-    void DuplicateField(int index)
+    void AddField(int sectionIndex) => sections[sectionIndex].Fields.Add(new DesignerField());
+
+    void RemoveField(int sectionIndex, DesignerField field) => sections[sectionIndex].Fields.Remove(field);
+
+    void DuplicateField(int sectionIndex, int index)
     {
-        var src = fields[index];
+        var list = sections[sectionIndex].Fields;
+        var src = list[index];
         var copy = new DesignerField
         {
             Key = string.Empty,
@@ -180,18 +231,31 @@
             Options = src.Options,
             IsRequired = src.IsRequired
         };
-        fields.Insert(index + 1, copy);
-        JS.InvokeVoidAsync("initListSortable", "#simple-fields", objRef!);
+        list.Insert(index + 1, copy);
     }
 
     [JSInvokable]
-    public void OnFieldReorder(int oldIndex, int newIndex)
+    public void OnSectionReorder(int oldIndex, int newIndex)
     {
-        if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= fields.Count || newIndex >= fields.Count)
+        if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= sections.Count || newIndex >= sections.Count)
             return;
-        var item = fields[oldIndex];
-        fields.RemoveAt(oldIndex);
-        fields.Insert(newIndex, item);
+        var item = sections[oldIndex];
+        sections.RemoveAt(oldIndex);
+        sections.Insert(newIndex, item);
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnFieldReorder(int sectionIndex, int oldIndex, int newIndex)
+    {
+        if (sectionIndex < 0 || sectionIndex >= sections.Count)
+            return;
+        var list = sections[sectionIndex].Fields;
+        if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= list.Count || newIndex >= list.Count)
+            return;
+        var item = list[oldIndex];
+        list.RemoveAt(oldIndex);
+        list.Insert(newIndex, item);
         StateHasChanged();
     }
 
@@ -203,34 +267,37 @@
             {
                 Severity = NotificationSeverity.Warning,
                 Summary = "Form name required",
-                Detail = "Please enter a form name before creating."
+                Detail = "Please enter a form name before creating.",
             });
             return;
         }
 
-        foreach (var f in fields)
+        foreach (var section in sections)
         {
-            if (string.IsNullOrWhiteSpace(f.Label))
+            foreach (var f in section.Fields)
             {
-                NotificationService.Notify(new NotificationMessage
+                if (string.IsNullOrWhiteSpace(f.Label))
                 {
-                    Severity = NotificationSeverity.Warning,
-                    Summary = "Field details missing",
-                    Detail = "Each field needs a label."
-                });
-                return;
-            }
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Warning,
+                        Summary = "Field details missing",
+                        Detail = "Each field needs a label.",
+                    });
+                    return;
+                }
 
-            if ((f.FieldType == "radio" || f.FieldType == "checkbox" || f.FieldType == "dropdown") &&
-                f.Options.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length == 0)
-            {
-                NotificationService.Notify(new NotificationMessage
+                if ((f.FieldType == "radio" || f.FieldType == "checkbox" || f.FieldType == "dropdown") &&
+                    f.Options.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length == 0)
                 {
-                    Severity = NotificationSeverity.Warning,
-                    Summary = "Options required",
-                    Detail = $"Add at least one option for '{f.Label}'."
-                });
-                return;
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Warning,
+                        Summary = "Options required",
+                        Detail = $"Add at least one option for '{f.Label}'.",
+                    });
+                    return;
+                }
             }
         }
 
@@ -242,17 +309,29 @@
             NotifyOnResponse = notifyOnResponse,
             NotificationEmail = string.IsNullOrWhiteSpace(notificationEmail) ? null : notificationEmail,
             IsActive = true,
-            Fields = fields.Select(f => new
-            {
-                Label = f.Label,
-                FieldType = f.FieldType,
-                IsRequired = f.IsRequired,
-                OptionsJson = string.IsNullOrWhiteSpace(f.Options)
-                    ? null
-                    : JsonSerializer.Serialize(
-                        f.Options.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    )
-            }).ToList()
+            Fields = sections.SelectMany(s =>
+                new[]
+                {
+                    new
+                    {
+                        Label = s.Title,
+                        FieldType = "section",
+                        IsRequired = false,
+                        OptionsJson = string.IsNullOrWhiteSpace(s.Instructions) ? null : JsonSerializer.Serialize(s.Instructions)
+                    }
+                }.Concat(
+                    s.Fields.Select(f => new
+                    {
+                        Label = f.Label,
+                        FieldType = f.FieldType,
+                        IsRequired = f.IsRequired,
+                        OptionsJson = string.IsNullOrWhiteSpace(f.Options)
+                            ? null
+                            : JsonSerializer.Serialize(
+                                f.Options.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    })
+                )
+            ).ToList()
         };
 
         var resp = await Http.PostAsJsonAsync("api/forms", payload);
@@ -266,7 +345,7 @@
             {
                 Severity = NotificationSeverity.Success,
                 Summary = "Form Created",
-                Detail = "Link copied to clipboard."
+                Detail = "Link copied to clipboard.",
             });
             Navigation.NavigateTo("/forms");
         }
@@ -276,7 +355,7 @@
             {
                 Severity = NotificationSeverity.Error,
                 Summary = "Error",
-                Detail = "Failed to create form."
+                Detail = "Failed to create form.",
             });
         }
     }
