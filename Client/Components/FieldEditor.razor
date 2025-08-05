@@ -34,7 +34,6 @@
                     <option value="grid_radio">Multiple Choice Grid</option>
                     <option value="grid_checkbox">Checkbox Grid</option>
                     <option value="title">Title</option>
-                    <option value="section">Section</option>
                     <option value="file">Upload File</option>
                 </select>
             </div>
@@ -100,7 +99,7 @@
             </div>
         }
 
-        @if (Field.FieldType != "title" && Field.FieldType != "section")
+        @if (Field.FieldType != "title")
         {
             <div class="form-check mt-3">
                 <input class="form-check-input" type="checkbox" @bind="Field.IsRequired" />
