@@ -105,6 +105,17 @@
                 </table>
                 break;
 
+            case "image":
+                @if (!string.IsNullOrWhiteSpace(field.OptionsJson))
+                {
+                    var img = JsonSerializer.Deserialize<ImageOptions>(field.OptionsJson!);
+                    if (!string.IsNullOrEmpty(img?.Url))
+                    {
+                        <img src="@img.Url" style=@($"max-width:100%;width:{img.Width}px;") />
+                    }
+                }
+                break;
+
             case "file":
                 <input type="file" class="form-control" disabled />
                 break;
@@ -135,4 +146,5 @@
 @code {
     [Parameter] public List<DesignerRow> Rows { get; set; } = new();
     [Parameter] public string? FormName { get; set; }
+    private record ImageOptions(string Url, int Width);
 }
