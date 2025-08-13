@@ -10,6 +10,9 @@
         // Dynamic options
         public List<string> OptionItems { get; set; } = new();
 
+        // Serialized options or additional metadata
+        public string? OptionsJson { get; set; }
+
         // Grid layout (for grid types)
         public List<string> GridRows { get; set; } = new();
         public List<string> GridColumns { get; set; } = new();
