@@ -1,4 +1,5 @@
 ﻿@using DynamicFormsApp.Shared
+@using System.Text.Json
 
 <h5 class="text-muted">Live Preview</h5>
 @if (!string.IsNullOrWhiteSpace(FormName))
@@ -104,6 +105,17 @@
                 </table>
                 break;
 
+            case "image":
+                @if (!string.IsNullOrWhiteSpace(field.OptionsJson))
+                {
+                    var img = JsonSerializer.Deserialize<ImageOptions>(field.OptionsJson!);
+                    if (!string.IsNullOrEmpty(img?.Url))
+                    {
+                        <img src="@img.Url" style=@($"max-width:100%;width:{img.Width}px;") />
+                    }
+                }
+                break;
+
             case "file":
                 <input type="file" class="form-control" disabled />
                 break;
@@ -115,6 +127,10 @@
             case "section":
                 <hr />
                 <h5>@field.Label</h5>
+                @if (!string.IsNullOrWhiteSpace(field.OptionsJson))
+                {
+                    <div class="text-muted">@(JsonSerializer.Deserialize<string>(field.OptionsJson!) ?? string.Empty)</div>
+                }
                 break;
 
             default:
@@ -130,4 +146,5 @@
 @code {
     [Parameter] public List<DesignerRow> Rows { get; set; } = new();
     [Parameter] public string? FormName { get; set; }
+    private record ImageOptions(string Url, int Width);
 }

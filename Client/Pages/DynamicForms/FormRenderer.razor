@@ -123,6 +123,17 @@ else
                         }
                         break;
 
+                    case "image":
+                        if (!string.IsNullOrWhiteSpace(fld.OptionsJson))
+                        {
+                            var img = JsonSerializer.Deserialize<ImageOptions>(fld.OptionsJson!);
+                            if (!string.IsNullOrEmpty(img?.Url))
+                            {
+                                <img src="@img.Url" style=@($"max-width:100%;width:{img.Width}px;") />
+                            }
+                        }
+                        break;
+
                     case "file":
                         <InputFile OnChange="e => OnFileUploadChanged(fld.Key, e)" />
                         @if (responseData.ContainsKey(fld.Key))
@@ -138,6 +149,10 @@ else
                     case "section":
                         <hr />
                         <h5>@fld.Label</h5>
+                        @if (!string.IsNullOrWhiteSpace(fld.OptionsJson))
+                        {
+                            <div class="text-muted">@(JsonSerializer.Deserialize<string>(fld.OptionsJson!) ?? string.Empty)</div>
+                        }
                         break;
 
                     case "scale":
@@ -354,4 +369,6 @@ else
     {
         public string filePath { get; set; }
     }
+
+    private record ImageOptions(string Url, int Width);
 }
