@@ -21,13 +21,13 @@
 
 <body data-bs-theme="dark">
     <Routes @rendermode="@InteractiveWebAssembly" />
-    <script src="_framework/blazor.web.js?v=@AppInfo.Version"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)&app=@AppInfo.Version"></script>
-    <script>navigator.serviceWorker.register('service-worker.js?v=@AppInfo.Version');</script>
     <script src="js/cookieHelper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="js/sortable-wrapper.js"></script>
     <script src="js/dragdrop-wrapper.js"></script>
+    <script src="_framework/blazor.web.js?v=@AppInfo.Version"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)&app=@AppInfo.Version"></script>
+    <script>navigator.serviceWorker.register('service-worker.js?v=@AppInfo.Version');</script>
     <script src="js/chartInterop.js"></script>
     <script type="module" src="js/exportHelper.js"></script>
     <script src="js/clipboardHelper.js"></script>
